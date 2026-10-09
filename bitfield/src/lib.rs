@@ -11,5 +11,41 @@
 // From the perspective of a user of this crate, they get all the necessary APIs
 // (macro, trait, struct) through the one bitfield crate.
 pub use bitfield_impl::bitfield;
+pub use bitfield_impl::define_specifiers;
+pub use bitfield_impl::BitfieldSpecifier;
 
-// TODO other things
+pub mod checks;
+
+/// Types that can be used as the type of a `#[bitfield]` struct field.
+pub trait Specifier {
+    /// Number of bits occupied by this field type.
+    const BITS: usize;
+
+    /// The integer (or enum, or `bool`) type that callers use to read and
+    /// write a field of this type.
+    type Accessor;
+
+    /// Convert a value of the accessor type into the raw bit representation.
+    fn into_bits(value: Self::Accessor) -> u64;
+
+    /// Convert a raw bit representation back into the accessor type.
+    fn from_bits(bits: u64) -> Self::Accessor;
+}
+
+/// `bool` occupies exactly one bit in a bitfield.
+impl Specifier for bool {
+    const BITS: usize = 1;
+
+    type Accessor = bool;
+
+    fn into_bits(value: bool) -> u64 {
+        value as u64
+    }
+
+    fn from_bits(bits: u64) -> bool {
+        bits != 0
+    }
+}
+
+// Defines B1 through B64 and their Specifier implementations.
+define_specifiers!();
